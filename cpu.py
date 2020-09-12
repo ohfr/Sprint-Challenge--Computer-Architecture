@@ -22,6 +22,12 @@ class CPU:
         self.branchTable[0b01010110] = self.JNE
         self.branchTable[0b01010101] = self.JEQ
         self.branchTable[0b1010100] = self.JMP
+        self.branchTable[0b00111100] = self.MOD
+        self.branchTable[0b00111000] = self.SHL
+        self.branchTable[0b00010000] = self.NOT
+        self.branchTable[0b00110000] = self.XOR
+        self.branchTable[0b01110000] = self.OR
+        self.branchTable[0b11110000] = self.AND
         self.R7 = 7
         self.FL = 0
 
@@ -30,6 +36,97 @@ class CPU:
         secondNum = self.ram_read(pc+2)
         self.register[firstNum] = self.register[firstNum] + self.register[secondNum]
         pc+=3
+        return pc
+
+    def AND(self, pc):
+        first_loc = self.ram_read(pc+1)
+        second_loc = self.ram_read(pc+2)
+
+        first_num = self.register[first_loc]
+        second_num = self.register[second_loc]
+
+        finalNum = first_num & second_num
+
+        self.register[first_loc] = finalNum
+        pc +=3
+        return pc
+
+    def OR(self, pc):
+        first_loc = self.ram_read(pc+1)
+        second_loc = self.ram_read(pc+2)
+
+        first_num = self.register[first_loc]
+        second_num = self.register[second_loc]
+
+        finalNum = first_num | second_num
+
+        self.register[first_loc] = finalNum
+        pc +=3
+        return pc
+ 
+    def XOR(self, pc):
+        first_loc = self.ram_read(pc+1)
+        second_loc = self.ram_read(pc+2)
+
+        first_num = self.register[first_loc]
+        second_num = self.register[second_loc]
+
+        finalNum = first_num ^ second_num
+
+        self.register[first_loc] = finalNum
+        pc +=3
+        return pc
+
+    def NOT(self, pc):
+        first_loc = self.ram_read(pc+1)
+        first_num = self.register[first_loc]
+        finalNum = ~ first_num
+
+        self.register[first_loc] = finalNum
+        pc +=2
+        return pc
+
+    def SHL(self, pc):
+        first_loc = self.ram_read(pc+1)
+        second_loc = self.ram_read(pc+2)
+
+        first_num = self.register[first_loc]
+        second_num = self.register[second_loc]
+
+        finalNum = first_num << second_num
+
+        self.register[first_loc] = finalNum
+        pc +=3
+        return pc
+
+    def SHR(self, pc):
+        first_loc = self.ram_read(pc+1)
+        second_loc = self.ram_read(pc+2)
+
+        first_num = self.register[first_loc]
+        second_num = self.register[second_loc]
+
+        finalNum = first_num >> second_num
+
+        self.register[first_loc] = finalNum
+        pc +=3
+        return pc
+
+    def MOD(self, pc):
+        first_loc = self.ram_read(pc+1)
+        second_loc = self.ram_read(pc+2)
+
+        first_num = self.register[first_loc]
+        second_num = self.register[second_loc]
+
+        if second_num == 0:
+            print("Error, cannot divide by zero")
+            return None
+
+        finalNum = first_num % second_num
+
+        self.register[first_loc] = finalNum
+        pc +=3
         return pc
 
     def CMP(self, pc):
@@ -124,7 +221,6 @@ class CPU:
         return pc
 
 
-
     def load(self):
         """Load a program into memory."""
 
@@ -201,11 +297,12 @@ class CPU:
         running = True
         pc= 0
         while running:
-            instruction = self.ram[pc]
-            if instruction in self.branchTable:
-                pc = self.branchTable[instruction](pc)
-            elif instruction == 0b00000001:
-                running = False
-            else:
-                print("Instruction {} not recognized".format(instruction))
-                return
+            if pc != None:
+                instruction = self.ram[pc]
+                if instruction in self.branchTable:
+                    pc = self.branchTable[instruction](pc)
+                elif instruction == 0b00000001:
+                    running = False
+                else:
+                    print("Instruction {} not recognized".format(instruction))
+                    return
